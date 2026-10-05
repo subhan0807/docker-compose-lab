@@ -1,0 +1,101 @@
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - frontend_net
+
+  backend:
+    build: ./backend
+
+    ports:
+      - "8080:8080"
+
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: app
+      DB_USER: appuser
+      DB_PASSWORD: apppassword
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+    depends_on:
+
+      postgres:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+      start_period: 10s
+
+    networks:
+      - frontend_net
+      - backend_net
+
+  postgres:
+    image: postgres:17
+
+    environment:
+      POSTGRES_DB: appdb
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: apppassword
+
+    volumes:
+
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U appuser -d appdb"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - backend_net
+
+  redis:
+    image: redis:7-alpine
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "redis-cli",
+          "ping"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+        - backend_net
+
+volumes:
+  postgres_data:
+
+networks:
+  frontend_net:
+  backend_net:

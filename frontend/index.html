@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Docker Compose - Python Flask</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #222;
+        }
+
+        .header {
+            background: #1f2937;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .result {
+            text-align: left;
+            background: #111827;
+            color: #00ff88;
+            padding: 20px;
+            border-radius: 8px;
+            min-height: 150px;
+            overflow-x: auto;
+        }
+
+        .architecture {
+            margin-top: 30px;
+            padding: 20px;
+            background: #eef2ff;
+            border-radius: 8px;
+            line-height: 1.8;
+        }
+
+        .status {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>Docker Compose Hands-On Lab</h1>
+        <p>AWS EC2 + Docker + Python Flask + PostgreSQL + Redis</p>
+    </div>
+
+    <div class="container">
+
+        <div class="card">
+
+            <h1>Python Flask Backend</h1>
+
+            <p class="subtitle">
+                Frontend is running through Nginx
+            </p>
+
+            <div class="buttons">
+
+                <button onclick="checkBackend()">
+                    Check Backend
+                </button>
+
+                <button onclick="checkHealth()">
+                    Health Check
+                </button>
+
+                <button onclick="checkDatabase()">
+                    Check PostgreSQL
+                </button>
+
+                <button onclick="checkRedis()">
+                    Check Redis
+                </button>
+
+            </div>
+
+            <div class="status" id="status">
+                Click a button to test the services.
+            </div>
+
+            <br>
+
+            <pre class="result" id="result">
+Waiting for response...
+            </pre>
+
+            <div class="architecture">
+
+                <h3>Application Architecture</h3>
+
+                <p>
+                    Browser → Nginx → Python Flask
+                </p>
+
+                <p>
+                    Python Flask → PostgreSQL
+                </p>
+
+                <p>
+                    Python Flask → Redis
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        // Backend is running on port 8080
+        const BACKEND_URL =
+            "http://" + window.location.hostname + ":8080";
+
+
+        async function callAPI(endpoint) {
+
+            const resultElement =
+                document.getElementById("result");
+
+            const statusElement =
+                document.getElementById("status");
+
+            statusElement.innerText =
+                "Calling Python Flask API...";
+
+            resultElement.innerText =
+                "Loading...";
+
+            try {
+
+                const response =
+                    await fetch(BACKEND_URL + endpoint);
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "HTTP Error: " + response.status
+                    );
+
+                }
+
+                const data =
+                    await response.json();
+
+                resultElement.innerText =
+                    JSON.stringify(data, null, 2);
+
+                statusElement.innerText =
+                    "Request successful ✓";
+
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+                statusElement.innerText =
+                    "Request failed ✗";
+
+                resultElement.innerText =
+                    "Error: " + error.message;
+
+            }
+        }
+
+
+        function checkBackend() {
+
+            callAPI("/");
+
+        }
+
+
+        function checkHealth() {
+
+            callAPI("/health");
+
+        }
+
+
+        function checkDatabase() {
+
+            callAPI("/database");
+
+        }
+
+
+        function checkRedis() {
+
+            callAPI("/redis");
+
+        }
+
+    </script>
+
+</body>
+
+</html>
